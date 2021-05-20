@@ -9,7 +9,7 @@ from torchvision.datasets import MNIST
 from torchvision.utils import save_image
 
 from utils.loss import KLDLoss
-from network.AE import VariationAutoEncoder, FC_VAE
+from network.VAE import VariationAutoEncoder, FC_VAE
 
 
 def select_device(device=''):
@@ -26,6 +26,7 @@ def select_device(device=''):
 
 
 def train(device_id='1'):
+    ''' train '''
     # CUDA device
     device = select_device(device_id)
     # MNIST dataset
@@ -98,6 +99,7 @@ def train(device_id='1'):
         torch.save(model.state_dict(), os.path.join(pth_save_dir, 'last_VAE.pt'))
 
 def test(device_id='1'):
+    ''' test '''
     # CUDA device
     device = select_device(device_id)
     # MNIST dataset
@@ -145,33 +147,25 @@ def test(device_id='1'):
 
 
 def sampling(device_id='1'):
+    ''' generate sample '''
     # CUDA device
     device = select_device(device_id)
-    # MNIST dataset
-    transform = T.Compose([ T.Resize((64,64)),
-                            T.ToTensor(),
-                            T.Normalize(mean=[0.5],std=[0.5])])
-
-    test_data = MNIST(root='../MNIST', train=False, transform=transform, download=True)
-    test_dataloader = DataLoader(test_data, batch_size=16, shuffle=False, num_workers=4)
     # model setting
     model = VariationAutoEncoder(in_channel=1, img_size=64, latent_dim=128)
     # model = FC_VAE(in_channel=1, img_size=28, latent_dim=2)
     model.load_state_dict(torch.load('./checkpoints/VAE/minist/last_VAE.pt'))
     model.to(device)
 
-    # test and vis
+    # generate sample and visualize
     vis_num = 64
-    save_dir = './visualization/VAE/minist'
     model.eval()
 
     v_imgs = model.sample(vis_num, device=device)
-
     save_image(v_imgs, "sample.png")
 
 
 def denormalization(x):
-    ''' 解归一化 '''
+    ''' de-normalize '''
     print(x.shape)
 
     mean = np.array([0.5])
